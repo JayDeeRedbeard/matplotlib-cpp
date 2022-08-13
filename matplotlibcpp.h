@@ -439,7 +439,7 @@ PyObject* get_listlist(const std::vector<std::vector<Numeric>>& ll)
 ///
 /// See: https://matplotlib.org/3.2.1/api/_as_gen/matplotlib.pyplot.plot.html
 template<typename Numeric>
-bool plot(const std::vector<Numeric> &x, const std::vector<Numeric> &y, const std::map<std::string, std::string>& keywords)
+bool plot(const std::vector<Numeric> &x, const std::vector<Numeric> &y, const std::map<std::string, std::string>& keywords)//, double alpha=1.0)
 {
     assert(x.size() == y.size());
 
@@ -460,6 +460,7 @@ bool plot(const std::vector<Numeric> &x, const std::vector<Numeric> &y, const st
     {
         PyDict_SetItemString(kwargs, it->first.c_str(), PyString_FromString(it->second.c_str()));
     }
+//    PyDict_SetItemString(kwargs, "alpha", PyFloat_FromDouble(alpha));
 
     PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_plot, args, kwargs);
 
@@ -1355,7 +1356,7 @@ bool named_hist(std::string label,const std::vector<Numeric>& y, long bins=10, s
 }
 
 template<typename NumericX, typename NumericY>
-bool plot(const std::vector<NumericX>& x, const std::vector<NumericY>& y, const std::string& s = "")
+bool plot(const std::vector<NumericX>& x, const std::vector<NumericY>& y, const std::string& s = "", double alpha=1.0f)
 {
     assert(x.size() == y.size());
 
@@ -1371,8 +1372,12 @@ bool plot(const std::vector<NumericX>& x, const std::vector<NumericY>& y, const 
     PyTuple_SetItem(plot_args, 1, yarray);
     PyTuple_SetItem(plot_args, 2, pystring);
 
-    PyObject* res = PyObject_CallObject(detail::_interpreter::get().s_python_function_plot, plot_args);
+    PyObject* kwargs = PyDict_New();
+    PyDict_SetItemString(kwargs, "alpha", PyFloat_FromDouble(alpha));
 
+    PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_plot, plot_args, kwargs);
+
+    Py_DECREF(kwargs);
     Py_DECREF(plot_args);
     if(res) Py_DECREF(res);
 

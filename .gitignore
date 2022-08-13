@@ -33,6 +33,9 @@
 
 # Build
 /examples/build/*
+.idea/
+build/
+cmake-build-debug/
 
 # vim temp files
 *.sw*
