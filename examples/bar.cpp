@@ -10,9 +10,10 @@ int main(int argc, char **argv) {
     for (int i = 0; i < 20; i++) {
         test_data.push_back(i);
     }
-
+    plt::rcparams({{"font.size", "55"}});
     plt::bar(test_data);
     plt::show();
+    plt::save("bar_size.png");
 
     return (0);
 }

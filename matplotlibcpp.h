@@ -2656,7 +2656,7 @@ inline void rcparams(const std::map<std::string, std::string>& keywords = {}) {
     PyObject* args = PyTuple_New(0);
     PyObject* kwargs = PyDict_New();
     for (auto it = keywords.begin(); it != keywords.end(); ++it) {
-    	  if ("text.usetex" == it->first or "font" == it->first)
+    	  if ("text.usetex" == it->first or "font.size" == it->first)
           PyDict_SetItemString(kwargs, it->first.c_str(), PyLong_FromLong(std::stoi(it->second.c_str())));
         else PyDict_SetItemString(kwargs, it->first.c_str(), PyString_FromString(it->second.c_str()));
     }
