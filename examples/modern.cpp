@@ -44,7 +44,8 @@ int main()
 	plt::figure_size(1200, 500);
 	plt::title("Bias Distribution compared to HSPICE.");
 	//					+ "\nOP(" + std::to_string(op_[0]) + "V/" + std::to_string(op_[1]) + "°C)");
-
+	plt::rcparams({{"lines.markersize", "10"}});
+	plt::plot(x,y, "ko-");
 	plt::scatter(x, y,1.0, {{"color","r"}, {"label", "FinFET-SLS"}});
 	y[1] = 40;
 	plt::scatter(x, y,1.0, {{"color","g"}, {"label", "Fin-SLS"}});

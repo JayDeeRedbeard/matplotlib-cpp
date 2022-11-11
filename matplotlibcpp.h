@@ -2657,8 +2657,17 @@ inline void rcparams(const std::map<std::string, std::string>& keywords = {}) {
     PyObject* kwargs = PyDict_New();
     for (auto it = keywords.begin(); it != keywords.end(); ++it) {
     	  if ("text.usetex" == it->first or "font.size" == it->first)
-          PyDict_SetItemString(kwargs, it->first.c_str(), PyLong_FromLong(std::stoi(it->second.c_str())));
-        else PyDict_SetItemString(kwargs, it->first.c_str(), PyString_FromString(it->second.c_str()));
+    	  {
+		      PyDict_SetItemString(kwargs, it->first.c_str(), PyLong_FromLong(std::stoi(it->second.c_str())));
+
+	      }
+    	  else if ("lines.markersize" == it->first)
+        {
+    	  	PyDict_SetItemString(kwargs, "lines.markersize", PyFloat_FromDouble(std::stoi(it->second.c_str())));
+        }else
+        {
+        	PyDict_SetItemString(kwargs, it->first.c_str(), PyString_FromString(it->second.c_str()));
+        }
     }
     
     PyObject * update = PyObject_GetAttrString(detail::_interpreter::get().s_python_function_rcparams, "update");
