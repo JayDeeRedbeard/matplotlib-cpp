@@ -14,7 +14,7 @@
 #include <cstdint> // <cstdint> requires c++11 support
 #include <functional>
 #include <string> // std::stod
-
+#define PY_MAJOR_VERSION 3
 #ifndef WITHOUT_NUMPY
 #  define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #  include <numpy/arrayobject.h>
@@ -164,19 +164,44 @@ private:
 #endif
 
     _interpreter() {
-
         // optional but recommended
 #if PY_MAJOR_VERSION >= 3
         wchar_t name[] = L"plotting";
 #else
         char name[] = "plotting";
 #endif
+#if PY_MINOR_VERSION < 11
         Py_SetProgramName(name);
         Py_Initialize();
 
         wchar_t const *dummy_args[] = {L"Python", NULL};  // const is needed because literals must not be modified
         wchar_t const **argv = dummy_args;
         int             argc = sizeof(dummy_args)/sizeof(dummy_args[0])-1;
+
+#else
+        PyStatus status;
+        PyConfig config;
+        PyConfig_InitPythonConfig(&config);
+        wchar_t const* dummy_args[] = { L"Python", NULL };  // const is needed because literals must not be modified
+        wchar_t* const* argv = const_cast<wchar_t* const*>(dummy_args);
+        int             argc = sizeof(dummy_args) / sizeof(dummy_args[0]) - 1;
+        if (argc && argv) {
+            status = PyConfig_SetString(&config, &config.program_name, name);
+            if (PyStatus_Exception(status)) {
+                PyConfig_Clear(&config);
+            }
+            status = PyConfig_SetArgv(&config, argc, argv);
+            if (PyStatus_Exception(status)) {
+                PyConfig_Clear(&config);
+            }
+        }
+        status = Py_InitializeFromConfig(&config);
+        if (PyStatus_Exception(status)) {
+            PyConfig_Clear(&config);
+        }
+        PyConfig_Clear(&config);
+#endif
+
 
 #if PY_MAJOR_VERSION >= 3
         PySys_SetArgv(argc, const_cast<wchar_t **>(argv));
@@ -2998,3 +3023,4 @@ private:
 };
 
 } // end namespace matplotlibcpp
+
