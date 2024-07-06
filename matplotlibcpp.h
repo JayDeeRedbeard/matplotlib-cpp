@@ -1702,7 +1702,34 @@ bool errorbar(const std::vector<NumericX> &x, const std::vector<NumericY> &y, co
 
     return res;
 }
+template<typename NumericX, typename NumericY>
+bool named_plot(const std::string& name, const std::vector<NumericX>& x, const std::vector<NumericY>& y, const std::map<std::string, std::string>& keywords = {})
+{
+    detail::_interpreter::get();
 
+    PyObject* kwargs = PyDict_New();
+    PyDict_SetItemString(kwargs, "label", PyString_FromString(name.c_str()));
+
+    for (const auto& keyword : keywords)
+    {
+        PyDict_SetItemString(kwargs, keyword.first.c_str(), PyString_FromString(keyword.second.c_str()));
+    }
+
+    PyObject* xarray = detail::get_array(x);
+    PyObject* yarray = detail::get_array(y);
+
+    PyObject* plot_args = PyTuple_New(2);
+    PyTuple_SetItem(plot_args, 0, xarray);
+    PyTuple_SetItem(plot_args, 1, yarray);
+
+    PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_plot, plot_args, kwargs);
+
+    Py_DECREF(kwargs);
+    Py_DECREF(plot_args);
+    if (res) Py_DECREF(res);
+
+    return res != nullptr;
+}
 template<typename Numeric>
 bool named_plot(const std::string& name, const std::vector<Numeric>& y, const std::string& format = "")
 {
