@@ -1981,22 +1981,31 @@ inline void legend()
     Py_DECREF(res);
 }
 
-inline void legend(const std::map<std::string, std::string>& keywords)
+inline void legend(const std::map<std::string, std::string>& keywords, const std::map<std::string, std::pair<double, double>>& tuple_keywords = {})
 {
-  detail::_interpreter::get();
+    detail::_interpreter::get();
 
-  // construct keyword args
-  PyObject* kwargs = PyDict_New();
-  for(std::map<std::string, std::string>::const_iterator it = keywords.begin(); it != keywords.end(); ++it)
-  {
-    PyDict_SetItemString(kwargs, it->first.c_str(), PyString_FromString(it->second.c_str()));
-  }
+    // construct keyword args
+    PyObject* kwargs = PyDict_New();
+    for(auto it = keywords.begin(); it != keywords.end(); ++it)
+    {
+        PyDict_SetItemString(kwargs, it->first.c_str(), PyString_FromString(it->second.c_str()));
+    }
 
-  PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_legend, detail::_interpreter::get().s_python_empty_tuple, kwargs);
-  if(!res) throw std::runtime_error("Call to legend() failed.");
+    for(auto it = tuple_keywords.begin(); it != tuple_keywords.end(); ++it)
+    {
+        PyObject* tuple = PyTuple_New(2);
+        PyTuple_SetItem(tuple, 0, PyFloat_FromDouble(it->second.first));
+        PyTuple_SetItem(tuple, 1, PyFloat_FromDouble(it->second.second));
+        PyDict_SetItemString(kwargs, it->first.c_str(), tuple);
+        Py_DECREF(tuple);
+    }
 
-  Py_DECREF(kwargs);
-  Py_DECREF(res);
+    PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_legend, detail::_interpreter::get().s_python_empty_tuple, kwargs);
+    if(!res) throw std::runtime_error("Call to legend() failed.");
+
+    Py_DECREF(kwargs);
+    Py_DECREF(res);
 }
 
 template<typename Numeric>
