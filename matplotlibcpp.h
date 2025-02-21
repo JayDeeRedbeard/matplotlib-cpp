@@ -67,6 +67,7 @@ struct _interpreter {
     PyObject *s_python_function_scatter;
     PyObject *s_python_function_boxplot;
     PyObject *s_python_function_subplot;
+    PyObject *s_python_function_subplots;
     PyObject *s_python_function_subplot2grid;
     PyObject *s_python_function_legend;
     PyObject *s_python_function_xlim;
@@ -268,6 +269,7 @@ private:
         s_python_function_scatter = safe_import(pymod,"scatter");
         s_python_function_boxplot = safe_import(pymod,"boxplot");
         s_python_function_subplot = safe_import(pymod, "subplot");
+        s_python_function_subplots = safe_import(pymod, "subplots");
         s_python_function_subplot2grid = safe_import(pymod, "subplot2grid");
         s_python_function_legend = safe_import(pymod, "legend");
         s_python_function_xlim = safe_import(pymod, "xlim");
@@ -2314,7 +2316,54 @@ inline void tick_params(const std::map<std::string, std::string>& keywords, cons
 
   Py_DECREF(res);
 }
+inline std::pair<PyObject*, PyObject*> subplots(long nrows=1, long ncols=1, bool sharex=false)
+{
+    // Ensure the Python interpreter is loaded
+    matplotlibcpp::detail::_interpreter::get();
 
+    // Prepare arguments
+    PyObject* args = PyTuple_New(0);
+    PyObject* kwargs = PyDict_New();
+
+    // Set "nrows" and "ncols"
+    PyDict_SetItemString(kwargs, "nrows", PyLong_FromLong(nrows));
+    PyDict_SetItemString(kwargs, "ncols", PyLong_FromLong(ncols));
+
+    // If we want sharex, pass True
+    if (sharex) {
+        PyDict_SetItemString(kwargs, "sharex", Py_True);
+    }
+
+    // Call Python’s subplots(nrows=..., ncols=..., sharex=...). Returns (fig, axes).
+    PyObject* res = PyObject_Call(matplotlibcpp::detail::_interpreter::get().s_python_function_subplots,
+                                  args, kwargs);
+    if (!res) {
+        Py_DECREF(args);
+        Py_DECREF(kwargs);
+        throw std::runtime_error("Call to subplots() failed.");
+    }
+
+    // Clean up
+    Py_DECREF(args);
+    Py_DECREF(kwargs);
+
+    // Make sure we got a (fig, axes) tuple
+    if (!PyTuple_Check(res) || PyTuple_Size(res) != 2) {
+        Py_DECREF(res);
+        throw std::runtime_error("Expected subplots() to return (fig, axes).");
+    }
+
+    // Extract the figure and axes, increment reference counts
+    PyObject* fig = PyTuple_GetItem(res, 0);
+    PyObject* axes = PyTuple_GetItem(res, 1);
+    Py_INCREF(fig);
+    Py_INCREF(axes);
+
+    // We no longer need `res`, so decrement its reference
+    Py_DECREF(res);
+
+    return {fig, axes};
+}
 inline void subplot(long nrows, long ncols, long plot_number)
 {
     detail::_interpreter::get();
